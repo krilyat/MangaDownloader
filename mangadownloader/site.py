@@ -119,3 +119,53 @@ class Starkana(manga.Book):
                                           chapter.number, chapter.Images)
             else:
                 log.info("chapter %s already retrive..." % chapter.number)
+
+
+class MangaStream(manga.Book):
+    def __init__(self, args):
+        manga.Book.__init__(self, args.title,
+                            args.directory,
+                            args.chapter,
+                            args.action)
+        self.lookups["mangastream.com"] = dnslookup("mangastream.com", 'A')[0]
+        self.baseurl = "http://%s" % self.lookups["mangastream.com"]
+        self.mangauri = "/manga/%s" % self.title.lower()
+        self.suffix = ""
+
+    def download(self):
+        log.debug("download")
+        tmp_chapters = []
+        soup = BS(utils.get_url("%s%s%s" % (self.baseurl, self.mangauri,
+                                            self.suffix),
+                                "mangastream.com").read())
+        if self.what_chapter == 'all':
+            for chapter in soup.find_all('a'):
+                if chapter.get('href') \
+                   and "/r/%s" % self.title.lower() in chapter.get('href'):
+                    url = chapter.get('href')
+                    number = chapter.get_text().split(" ", 1)[0]
+                    chap = manga.Page(utils.unifyNumber(number), url)
+                    self.chapters.append(chap)
+        elif self.what_chapter == 'last':
+            for chapter in soup.find_all('a'):
+                if chapter.get('href') \
+                   and "/r/%s" % self.title.lower() in chapter.get('href'):
+                    url = chapter.get('href')
+                    number = chapter.get_text().split(" ", 1)[0]
+                    chap = manga.Page(utils.unifyNumber(number), url)
+                    tmp_chapters.append(chap)
+            self.chapters.append(max(tmp_chapters, key=lambda x: x.number))
+        elif self.what_chapter.isdigit():
+            for chapter in soup.find_all('a'):
+                if chapter.get('href') \
+                   and "/r/%s" % self.title.lower() in chapter.get('href'):
+                    url = chapter.get('href')
+                    number = chapter.get_text().split(" ", 1)[0]
+                    chap = manga.Page(utils.unifyNumber(number), url)
+                    if self.what_chapter == number:
+                        self.chapters.append(chap)
+                        continue
+        self.makePages()
+
+    def makePages(self):
+        print "todo"
