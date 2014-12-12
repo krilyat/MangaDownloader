@@ -27,7 +27,7 @@ def get_url(url, host,  retry=5):
         # open a connection and receive http the response headers + contents
         response = opener.open(request)
     except (urllib2.HTTPError, urllib2.URLError) as e:
-        #Petite gestion des codes 4xx
+        # Petite gestion des codes 4xx
         log.warning("error (%s) on : %s\n...try again" % (e, url))
         sleep(5)
         if retry >= 0:
@@ -71,75 +71,79 @@ def pageNumber(url, last_page_number):
 
     try:
         raw_number.decode('ascii')
-    except UnicodeEncodeError as e:
+    except UnicodeEncodeError:
             pagenumber = "%s.9800" % last_page_number
     else:
         if raw_number.isdigit():
-        #deal with correctly formated number
+            # deal with correctly formated number
             pagenumber = raw_number
         elif re.match('\d+ $', raw_number):
-        #deal with name like "58 "
+            # deal with name like "58 "
             pagenumber = re.findall("\d+", raw_number)[0]
         elif re.match('\d+ +\d+$', raw_number):
-        #deal with name like "58 "
+            # deal with name like "58 "
             pagenumber = re.findall("\d+", raw_number)[-1]
         elif re.match('\d+ \(\d+\)$', raw_number):
-        #deal with name like "chapter (page)" ex: 58 (1)
+            # deal with name like "chapter (page)" ex: 58 (1)
             pagenumber = re.findall("\d+", raw_number.split(" ")[1])[0]
         elif re.match('\d+ \([a-zA-Z]+\)$', raw_number):
-        #deal with name like "58 (abc)"
+            # deal with name like "58 (abc)"
             pagenumber = re.findall("\d+", raw_number)[0]
         elif re.search(' - \d+$', raw_number):
-        #deal with name like "Ao no Exorcist v01 c02 - 00"
+            # deal with name like "Ao no Exorcist v01 c02 - 00"
             if raw_number.split(" - ")[-1].isdigit():
                 pagenumber = re.findall("\d+", raw_number.split(" - ")[-1])[0]
             else:
                 pagenumber = "%s.8000" % last_page_number
         elif re.search('ch\d+[-_ ]\d+$', raw_number):
-        #deal with name like "manga-rainbleach-ch123-19"
+            # deal with name like "manga-rainbleach-ch123-19"
             pagenumber = re.findall("\d+", raw_number)[-1]
         elif re.match('.*_\d*(-\d*)?$', raw_number):
-        #deal with name like "DEAD_01_0008-0009"
-        #deal with name like "DEAD_01_0079"
+            # deal with name like "DEAD_01_0008-0009"
+            # deal with name like "DEAD_01_0079"
             pagenumber = re.findall('(\d+|\d+-\d+)$', raw_number)[0]
         elif re.search('_\d+(-\d+)?(_[a-zA-Z]+)?$', raw_number):
-        #deal with name like "[MRI]Bakuman_155_02_credits"
+            # deal with name like "[MRI]Bakuman_155_02_credits"
             pagenumber = re.findall('(\d+|\d+-\d+)$',
                                     raw_number.rsplit('_', 1)[0])[0]
         elif re.match('\d+-[a-zA-Z]+', raw_number):
-        #deal with pagesname like "00-ANECP"
+            # deal with pagesname like "00-ANECP"
             pagenumber = raw_number.split("-")[0]
         elif re.match('\d+[a-zA-Z]', raw_number):
-        #deal with pagesname like "00b"
+            # deal with pagesname like "00b"
             subnumber = string.lowercase.index(re.findall('[a-zA-Z]',
                                                raw_number)[0].lower()) + 1000
-            pagenumber = "%s.%s" % (re.findall('\d+', raw_number)[0], subnumber)
+            pagenumber = "%s.%s" % (re.findall('\d+',
+                                    raw_number)[0],
+                                    subnumber)
         elif re.search('[-_]\d+[a-zA-Z]', raw_number):
-        #deal with pagesname like "Wallman-c1_00b" or "002--003a"
+            # deal with pagesname like "Wallman-c1_00b" or "002--003a"
             numberpart = re.split('[-_]', raw_number)[-1]
             letterpart = string.lowercase.index(re.findall('[a-zA-Z]',
                                                 numberpart)[0].lower()) + 1000
-            pagenumber = "%s.%s" % (re.findall('\d+', numberpart)[0], letterpart)
+            pagenumber = "%s.%s" % (re.findall('\d+',
+                                    numberpart)[0],
+                                    letterpart)
         elif re.match('\d+ ?[a-zA-Z]+', raw_number):
-        #deal with pagesname like "00ANECP"
+            # deal with pagesname like "00ANECP"
             pagenumber = re.findall('\d+', raw_number)[0]
         elif re.search('\d+(_[a-zA-Z]+)+$', raw_number):
-        #deal with pagesname like "00_NS"
+            # deal with pagesname like "00_NS"
             pagenumber = re.findall('\d+', raw_number)[-1]
         elif re.match('\d+ - .{7}$', raw_number):
-        #deal with name like "02 - p28StSG"
+            # deal with name like "02 - p28StSG"
             if raw_number.split(" - ")[-1].isdigit():
                 pagenumber = re.findall("\d+", raw_number.split(" - ")[0])[0]
             else:
                 pagenumber = "%s.8000" % last_page_number
         elif re.search('\d+[-_]\d+([-_]\d+)?', raw_number, re.IGNORECASE):
-        #deal with pagesnames like "170-01" "170-02-03"
+            # deal with pagesnames like "170-01" "170-02-03"
             pagenumber = "%s.9100" % re.findall('\d+', raw_number)[-1]
         elif re.match('.*(credit(s)?|recruit)', raw_number, re.IGNORECASE):
-        #deal with pagesnames like credit or other
+            # deal with pagesnames like credit or other
             pagenumber = "%s.9000" % last_page_number
         elif re.match('[a-z-_]+', raw_number, re.IGNORECASE):
-        #deal with pagesnames like credit or other
+            # deal with pagesnames like credit or other
             pagenumber = "%s.9900" % last_page_number
         else:
             log.warn("What else... %s" % raw_number)
@@ -180,6 +184,7 @@ def makeChapterDir(d, t, c):
         return len(os.listdir(chapterdir))
     return -1
 
+
 def cleanChapterDir(d, t, c):
     chapterdir = os.path.join(d, t, c)
     log.info("cleaning %s" % chapterdir)
@@ -208,8 +213,11 @@ def downloadChapter(d, t, c, i):
         imgname = os.path.join(chapterdir, "%s.%s" % (image.number, image.ext))
         if os.path.isfile(imgname):
             image.number = "%s.5000" % image.number
-            log.debug("New page %s %s %s" % (image.number, image.ext, image.url))
-            imgname = os.path.join(chapterdir, "%s.%s" % (image.number, image.ext))
+            log.debug("New page %s %s %s" % (image.number,
+                                             image.ext,
+                                             image.url))
+            imgname = os.path.join(chapterdir, "%s.%s" % (image.number,
+                                                          image.ext))
         with open(imgname, 'wb') as img:
             log.debug("download image %s" % image.url)
             img.write(get_url(image.url, image.host).read())

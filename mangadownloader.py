@@ -3,13 +3,16 @@ import logging as log
 
 from mangadownloader import site
 
-parser = argparse.ArgumentParser(description=
-                                 'Download mangas from online reading sites')
+parser = argparse.ArgumentParser(
+    description='Download mangas from online reading sites')
 
 sitearg = parser.add_argument_group('Site (One required)')\
     .add_mutually_exclusive_group()
 sitearg.add_argument('--starkana', action='store_const', const='starkana',
                      dest='site', help='Download from https://starkana.org/')
+sitearg.add_argument('--mangastream', action='store_const',
+                     const='mangastream',
+                     dest='site', help='Download from http://mangastream.com/')
 
 mangaarg = parser.add_argument_group('Manga')
 mangaarg.add_argument('title', help='Manga Title')

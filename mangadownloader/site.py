@@ -63,7 +63,8 @@ class Starkana(manga.Book):
         for chapter in self.chapters:
             log.debug("make Pages for chapter %s" % chapter.number)
             c = utils.checkChapterDir(self.basedir, self.title, chapter.number)
-            if c != 0 and self.action == "append" and self.what_chapter == "all":
+            if c != 0 and self.action == "append" and \
+               self.what_chapter == "all":
                 continue
             soup = BS(utils.get_url("%s%s%s" % (self.baseurl, chapter.url,
                                                 self.suffix),
@@ -104,11 +105,16 @@ class Starkana(manga.Book):
                 utils.downloadChapter(self.basedir, self.title,
                                       chapter.number, chapter.Images)
             elif c > 0:
-                if self.action == 'force' or (len(chapter.Images) != c and self.action != 'append') or self.what_chapter.isdigit():
-                    log.debug("chapter.Images %s | c %s" % (len(chapter.Images), c))
+                if self.action == 'force' \
+                   or (len(chapter.Images) != c
+                        and self.action != 'append') \
+                   or self.what_chapter.isdigit():
+                    log.debug("chapter.Images %s | c %s" %
+                              (len(chapter.Images), c))
                     log.debug("action = %s" % self.action)
                     log.debug("isdigit %s" % self.what_chapter.isdigit())
-                    utils.cleanChapterDir(self.basedir, self.title, chapter.number)
+                    utils.cleanChapterDir(self.basedir, self.title,
+                                          chapter.number)
                     utils.downloadChapter(self.basedir, self.title,
                                           chapter.number, chapter.Images)
             else:
