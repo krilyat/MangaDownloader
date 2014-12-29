@@ -49,4 +49,4 @@ elif args.site == 'starkana':
     manga = site.Starkana(args)
 elif args.site == 'mangastream':
     manga = site.MangaStream(args)
-    manga.download()
+manga.download()
