@@ -13,8 +13,9 @@ class Starkana(manga.Book):
                             args.directory,
                             args.chapter,
                             args.action)
-        self.lookups["starkana.com"] = dnslookup("starkana.com", 'A')[0]
-        self.baseurl = "http://%s" % self.lookups["starkana.com"]
+        self.fqdn = "starkana.jp"
+        self.lookups[self.fqdn] = dnslookup(self.fqdn, 'A')[0]
+        self.baseurl = "http://%s" % self.lookups[self.fqdn]
         self.mangauri = "/manga/%s/%s" % (self.title[0:1], self.title)
         self.suffix = "?mature_confirm=1&scroll"
 
@@ -28,7 +29,7 @@ class Starkana(manga.Book):
         tmp_chapters = []
         soup = BS(utils.get_url("%s%s%s" % (self.baseurl, self.mangauri,
                                             self.suffix),
-                                "starkana.com").read())
+                                self.fqdn).read())
         if self.what_chapter == 'all':
             for chapter in soup.find_all('a'):
                 if chapter.get('class') and\
@@ -68,7 +69,7 @@ class Starkana(manga.Book):
                 continue
             soup = BS(utils.get_url("%s%s%s" % (self.baseurl, chapter.url,
                                                 self.suffix),
-                                    "starkana.com").read())
+                                    self.fqdn).read())
 
             for image in soup.find_all('img'):
                 image_url = image.get('src')
