@@ -47,4 +47,4 @@ if not args.site:
     parser.print_help()
 elif args.site == 'starkana':
     manga = site.Starkana(args)
-    manga.download()
+manga.download()
