@@ -19,7 +19,7 @@ def get_url(url, host,  retry=5):
         'Accept': 'text/plain'}
 
     # create a request object for the URL
-    request = urllib2.Request(url.encode('utf-8'), headers=req_headers)
+    request = urllib2.Request(urllib2.quote(url, ':/?%&'), headers=req_headers)
     # create an opener object
     opener = urllib2.build_opener()
 
@@ -97,6 +97,9 @@ def pageNumber(url, last_page_number):
                 pagenumber = "%s.8000" % last_page_number
         elif re.search('ch\d+[-_ ]\d+$', raw_number):
             # deal with name like "manga-rainbleach-ch123-19"
+            pagenumber = re.findall("\d+", raw_number)[-1]
+        elif re.search('ch\d+pg\d+$', raw_number):
+            # deal with name like "manga-rainbleach-ch123pg19"
             pagenumber = re.findall("\d+", raw_number)[-1]
         elif re.match('.*_\d*(-\d*)?$', raw_number):
             # deal with name like "DEAD_01_0008-0009"
@@ -180,7 +183,7 @@ def makeChapterDir(d, t, c):
         os.mkdir(chapterdir)
         return 0
     else:
-        log.info("%s seems to be already here..." % chapterdir)
+        log.info("[makeChapterDir] %s seems to be already here.." % chapterdir)
         return len(os.listdir(chapterdir))
     return -1
 
@@ -200,7 +203,7 @@ def checkChapterDir(d, t, c):
     elif not os.path.isdir(chapterdir):
         return 0
     else:
-        log.info("%s seems to be already here..." % chapterdir)
+        log.info("[checkChapterDir] %s seems to be already here." % chapterdir)
         return len(os.listdir(chapterdir))
     return -1
 
@@ -221,3 +224,4 @@ def downloadChapter(d, t, c, i):
         with open(imgname, 'wb') as img:
             log.debug("download image %s" % image.url)
             img.write(get_url(image.url, image.host).read())
+            log.debug("downloaded %s" % image.url)
