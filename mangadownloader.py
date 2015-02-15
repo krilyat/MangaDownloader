@@ -1,7 +1,6 @@
 import argparse
 import logging as log
-
-from mangadownloader import site
+import mangadownloader as md
 
 parser = argparse.ArgumentParser(
     description='Download mangas from online reading sites')
@@ -46,5 +45,5 @@ else:
 if not args.site:
     parser.print_help()
 elif args.site == 'starkana':
-    manga = site.Starkana(args)
+    manga = md.Starkana(args)
 manga.download()
