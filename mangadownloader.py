@@ -1,6 +1,9 @@
 import argparse
 import logging as log
-import mangadownloader as md
+
+from mangadownloader.Starkana import Starkana
+from mangadownloader.Eatmanga import Eatmanga
+from mangadownloader.Mangastream import Mangastream
 
 parser = argparse.ArgumentParser(
     description='Download mangas from online reading sites')
@@ -8,10 +11,13 @@ parser = argparse.ArgumentParser(
 sitearg = parser.add_argument_group('Site (One required)')\
     .add_mutually_exclusive_group()
 sitearg.add_argument('--starkana', action='store_const', const='starkana',
-                     dest='site', help='Download from https://starkana.org/')
+                     dest='site', help='Download from https://starkana.jp/')
 sitearg.add_argument('--mangastream', action='store_const',
                      const='mangastream',
                      dest='site', help='Download from http://mangastream.com/')
+sitearg.add_argument('--eatmanga', action='store_const',
+                     const='eatmanga',
+                     dest='site', help='Download from http://eatmanga.com/')
 
 mangaarg = parser.add_argument_group('Manga')
 mangaarg.add_argument('title', help='Manga Title')
@@ -45,5 +51,9 @@ else:
 if not args.site:
     parser.print_help()
 elif args.site == 'starkana':
-    manga = md.Starkana(args)
+    manga = Starkana(args)
+elif args.site == 'mangastream':
+    manga = Mangastream(args)
+elif args.site == 'eatmanga':
+    manga = Eatmanga(args)
 manga.download()
