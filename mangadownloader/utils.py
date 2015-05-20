@@ -8,11 +8,18 @@ from time import sleep
 from sys import exit
 
 
-def get_url(url, host,  retry=5):
+def get_url(url, lookups, retry=5):
     log.debug("get_url")
-    log.debug("try : %s" % url)
+    log.info("try : %s" % url)
+    fqdn = ""
+    if type(lookups) is dict:
+        fqdn = url.split('/')[2]
+        url = url.replace(fqdn, lookups[fqdn])
+    else:
+        fqdn = lookups
+
     req_headers = {
-        'Host': host,
+        'Host': fqdn,
         'User-Agent': 'Mozilla/5.0',
         'Referer': 'http://www.google.com',
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -53,10 +60,10 @@ def unifyNumber(num):
     if not num:
         raise TypeError("number cannot be empty")
     else:
-        num.replace('/', '.')
-        if num.isdigit():
+        if type(num) is int or num.isdigit():
             number = "%04d" % int(num)
         elif re.search("[.-]", num):
+            num.replace('/', '.')
             part = re.split("[.-]", num)
             if len(part) == 2:
                 number = "%04d.%04d" % (int(part[0]), int(part[1]))
@@ -212,7 +219,8 @@ def downloadChapter(d, t, c, i):
     log.debug("downloadChapter")
     chapterdir = os.path.join(d, t, c)
     for image in i:
-        log.debug("page %s %s %s" % (image.number, image.ext, image.url))
+        log.debug("page %s %s %s %s" % (image.number, image.ext, image.url,
+                                        image.host))
         imgname = os.path.join(chapterdir, "%s.%s" % (image.number, image.ext))
         if os.path.isfile(imgname):
             image.number = "%s.5000" % image.number
