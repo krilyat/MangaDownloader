@@ -1,3 +1,6 @@
+from DNS import dnslookup
+
+
 class Book(object):
 
     def __init__(self, title, basedir, chapter, action):
@@ -7,6 +10,11 @@ class Book(object):
             self.action) = title, chapter, basedir, action
         self.lookups = dict()
         self.chapters = []
+
+    def addLookup(self, url):
+        fqdn = url.split('/')[2]
+        if fqdn not in self.lookups:
+            self.lookups[fqdn] = dnslookup(fqdn, 'A')[0]
 
 
 class Cpi(object):
