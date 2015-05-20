@@ -2,7 +2,6 @@ import manga
 import utils
 import logging as log
 
-from DNS import dnslookup
 from sys import exit
 from bs4 import BeautifulSoup as BS
 
@@ -13,11 +12,9 @@ class Eatmanga(manga.Book):
                             args.directory,
                             args.chapter,
                             args.action)
-        self.fqdn = "eatmanga.com"
-        self.lookups[self.fqdn] = dnslookup(self.fqdn, 'A')[0]
-        self.baseurl = "http://%s" % self.lookups[self.fqdn]
+        self.baseurl = "http://eatmanga.com"
+        self.addLookup(self.baseurl)
         self.mangauri = "/Manga-Scan/%s" % self.title
-        self.suffix = ""
 
     def download(self):
         """
@@ -27,69 +24,83 @@ class Eatmanga(manga.Book):
         """
         log.debug("download")
         tmp_chapters = []
-        soup = BS(utils.get_url("%s%s%s" % (self.baseurl, self.mangauri,
-                                            self.suffix),
-                                self.fqdn).read())
+        soup = BS(utils.get_url("%s%s" % (self.baseurl, self.mangauri),
+                                self.lookups).read())
         if self.what_chapter == 'all':
             for chapter in soup.find_all('a'):
-                if chapter.get('class') and\
-                   "download-link" in chapter.get('class'):
+                if chapter.get('href') and\
+                   "%s" % self.mangauri in chapter.get('href'):
                     url = chapter.get('href')
                     number = chapter.get_text().rsplit(" ", 1)[-1]
-                    chap = manga.Page(utils.unifyNumber(number), url)
+                    chap = manga.Chapter(utils.unifyNumber(number), url)
+                    log.debug("%s\n%s" % (chap.url, chap.number))
                     self.chapters.append(chap)
         elif self.what_chapter == 'last':
             for chapter in soup.find_all('a'):
-                if chapter.get('class') and\
-                   "download-link" in chapter.get('class'):
+                if chapter.get('href') and\
+                   "%s" % self.mangauri in chapter.get('href'):
                     url = chapter.get('href')
                     number = chapter.get_text().rsplit(" ", 1)[-1]
-                    chap = manga.Page(utils.unifyNumber(number), url)
+                    chap = manga.Chapter(utils.unifyNumber(number), url)
+                    log.debug("%s\n%s" % (chap.url, chap.number))
                     tmp_chapters.append(chap)
             self.chapters.append(max(tmp_chapters, key=lambda x: x.number))
         elif self.what_chapter.isdigit():
             for chapter in soup.find_all('a'):
-                if chapter.get('class') and\
-                   "download-link" in chapter.get('class'):
-                    number = chapter.get_text().rsplit(" ", 1)[-1]
+                if chapter.get('href') and\
+                   "%s" % self.mangauri in chapter.get('href'):
                     url = chapter.get('href')
-                    chap = manga.Page(utils.unifyNumber(number), url)
+                    number = chapter.get_text().rsplit(" ", 1)[-1]
+                    chap = manga.Chapter(utils.unifyNumber(number), url)
+                    log.debug("%s\n%s" % (chap.url, chap.number))
                     if self.what_chapter == number:
                         self.chapters.append(chap)
                         continue
-        self.makePages()
+        self.makeChapters()
 
-    def makePages(self):
-        log.debug("makePages")
+    def makeChapters(self):
+        log.debug("makeChapters")
         for chapter in self.chapters:
             log.debug("make Pages for chapter %s" % chapter.number)
             c = utils.checkChapterDir(self.basedir, self.title, chapter.number)
             if c != 0 and self.action == "append" and \
                self.what_chapter == "all":
                 continue
-            soup = BS(utils.get_url("%s%s%s" % (self.baseurl, chapter.url,
-                                                self.suffix),
-                                    self.fqdn).read())
+            soup = BS(utils.get_url("%s%s" % (self.baseurl, chapter.url),
+                                    self.lookups).read())
 
-            for image in soup.find_all('img'):
-                image_url = image.get('src')
-                if "manga-img" in image_url:
-                    img_host = image_url.split('/', 3)[-2]
-                    if img_host not in self.lookups:
-                        self.lookups[img_host] = dnslookup(img_host, 'A')[0]
-                    image_url = image_url.replace(img_host,
-                                                  self.lookups[img_host])
-                    image_ext = image_url.rsplit('.', 1)[-1]
+            for page in soup.find_all('option'):
+                log.debug(page.get('value'))
+                if page.get('value') and\
+                   self.mangauri in page.get('value'):
+                    url = page.get('value')
+                    number = page.get_text()
+                    Page = manga.Page(utils.unifyNumber(number), url)
+                    chapter.Pages.append(Page)
+
+        self.makePages()
+
+    def makePages(self):
+        for page in self.chapter.Pages:
+            soup = BS(utils.get_url("%s%s" % (self.baseurl, page.url),
+                                    self.lookups).read())
+            for img in soup.find_all('img'):
+                if img.get('id') and\
+                   "eatmanga_image_big" in img.get('id'):
+                    img_url = img.get("src")
+                    img_host = img_url.split('/', 3)[-2]
+                    self.addLookup(img_url)
+                    img_url = img_url.replace(img_host, self.lookups[img_host])
+                    img_ext = img_url.rsplit('.', 1)[-1]
                     last_page_number = 0
-                    if len(chapter.Images):
-                        last_page_number = int(chapter.Images[-1].number
+                    if len(page.Images):
+                        last_page_number = int(page.Images[-1].number
                                                .split('.')[0]) + 1
-                    i = manga.Image(utils.pageNumber(image_url,
+                    i = manga.Image(utils.pageNumber(img_url,
                                                      last_page_number),
-                                    image_url, img_host, image_ext)
-                    chapter.Images.append(i)
-                    sorted(chapter.Images, key=lambda img: img.number)
-
+                                    img_url, img_host, img_ext)
+                    page.Images.append(i)
+                    sorted(page.Images, key=lambda img: img.number)
         self.downloadBook()
 
     def downloadBook(self):
